@@ -7,6 +7,8 @@ const REPO_URL = "https://github.com/ArthurDavino/gta6-ml-grupo7";   // reposit�
 /* ========================================================================== */
 
 const slides = [...document.querySelectorAll(".slide")];
+/* Tempo previsto por slide (total 14 min, deixando 1 min de folga dos 15 permitidos). O slide 10 é dividido entre dois integrantes. */
+const TEMPOS = ["0:35", "0:55", "0:35", "1:30", "1:30", "1:10", "1:10", "1:10", "1:15", "2:00 (1:00 cada)", "0:40", "0:45", "0:20", "0:25"];
 let current = 0, overviewOpen = false, helpOpen = false, timerRunning = false, seconds = 0, timerHandle = null;
 const $ = (q) => document.querySelector(q), $$ = (q) => [...document.querySelectorAll(q)];
 const quem = (s, curto) => s.dataset.person.split(",").map((i) => (curto ? EQUIPE[+i].split(" ")[0] : EQUIPE[+i])).join(" + ");
@@ -16,7 +18,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const NOTAS = [
   ["Abertura. Apresentar o grupo e o tema: usamos o universo de GTA 6 como cenário para mostrar aprendizado supervisionado e não supervisionado.",
    "Avisar a turma: os dados são simulados, mas os algoritmos são reais, e a demonstração roda aqui dentro, com os mesmos modelos do código Python.",
-   "Tempo total: 15 minutos, teoria e prática. Clique em 'Iniciar missão'."],
+   "Tempo total previsto: 14 minutos, teoria e prática (o limite é 15). Clique em 'Iniciar missão'."],
   ["Supervisionado: temos o gabarito (o golpe deu certo ou não) e o modelo aprende a prever isso para casos novos.",
    "Não supervisionado: não existe gabarito. O algoritmo agrupa jogadores parecidos sem saber quem é quem.",
    "Clique nos dois cartões e use o botão do gráfico para mostrar a diferença: de um lado os pontos têm cor (resposta conhecida); do outro, só depois de agrupar."],
@@ -61,7 +63,7 @@ const NOTAS = [
 function renderNotes() {
   const s = slides[current];
   $("#notes-title").textContent = s.dataset.title;
-  $("#notes-person").textContent = quem(s) + " · " + s.dataset.part;
+  $("#notes-person").textContent = quem(s) + " · " + s.dataset.part + " · tempo previsto " + TEMPOS[current];
   $("#notes-body").innerHTML = (NOTAS[current] || ["Retome a ideia principal do slide."]).map((t) => "<p>" + esc(t) + "</p>").join("");
 }
 function updateChrome() {
