@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+# Modelos são regenerados por 01/02/03 (ou pelo main.py, opção 5)
+modelos/
