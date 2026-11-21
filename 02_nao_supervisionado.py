@@ -16,6 +16,7 @@ SAÍDAS
     graficos/02_pca_variancia.png         -> quanta informação cada componente guarda
     graficos/02_clusters_pca.png          -> os grupos desenhados em 2D
     graficos/02_perfis_heatmap.png        -> "personalidade" de cada grupo
+    graficos/02_silhouette_por_cluster.png -> o quão coeso é cada grupo (silhouette por grupo)
     dados/perfis_clusters.csv             -> média de cada grupo (unidades originais)
     dados/dados_com_clusters.csv          -> cada jogador com seu grupo
     modelos/modelo_kmeans.joblib          -> usado pelo main.py
@@ -37,7 +38,7 @@ import pandas as pd
 from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import adjusted_rand_score, silhouette_score
+from sklearn.metrics import adjusted_rand_score, silhouette_samples, silhouette_score
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -217,6 +218,36 @@ def grafico_heatmap(centros_z: pd.DataFrame, nomes: dict) -> None:
     plt.close(fig)
 
 
+def grafico_silhouette_clusters(sil: np.ndarray, rotulos: np.ndarray, nomes: dict) -> None:
+    """Gráfico de silhouette POR GRUPO (um "retrato" de cada perfil).
+
+    MATEMÁTICA: o silhouette de CADA jogador é  s = (b - a) / max(a, b)
+      a = distância média até os outros jogadores do MEU grupo
+      b = distância média até os jogadores do grupo VIZINHO mais próximo
+    Aqui desenhamos o s de todos os jogadores, ordenados dentro de cada grupo:
+    uma "faixa" larga e comprida para a direita = grupo coeso e bem separado;
+    pontos perto de 0 ou negativos = jogadores na fronteira entre dois grupos.
+    A linha tracejada é o silhouette médio geral (o número que escolheu o K).
+    """
+    fig, ax = plt.subplots(figsize=(8, 5.5))
+    y0 = 0
+    for c in sorted(nomes):
+        valores = np.sort(sil[rotulos == c])
+        ax.fill_betweenx(np.arange(y0, y0 + len(valores)), 0, valores,
+                         color=CORES[c % len(CORES)], alpha=0.85)
+        ax.text(-0.04, y0 + len(valores) / 2, f"{nomes[c]}\n(média {valores.mean():.2f})",
+                ha="right", va="center", fontsize=9)
+        y0 += len(valores) + 40            # espaço entre os grupos
+    ax.axvline(sil.mean(), color="black", ls="--", label=f"média geral = {sil.mean():.3f}")
+    ax.set(title="Silhouette de cada jogador, por grupo", xlabel="silhouette (de −1 a +1)",
+           xlim=(-0.1, 1), yticks=[])
+    ax.legend(loc="lower right")
+    ax.grid(axis="x", alpha=0.3)
+    fig.subplots_adjust(left=0.27)
+    fig.savefig(PASTA_GRAFICOS / "02_silhouette_por_cluster.png", dpi=130)
+    plt.close(fig)
+
+
 # ----------------------------------------------------------------------------
 # EXECUÇÃO
 # ----------------------------------------------------------------------------
@@ -295,15 +326,25 @@ def main() -> None:
     print("\n    Repare: o K-Means NUNCA viu a coluna `sucesso`, mas os grupos têm taxas")
     print("    de sucesso diferentes -> os perfis descobertos têm significado real.")
 
+    # --- Silhouette por grupo: quais perfis são mais coesos? ----------------
+    sil = silhouette_samples(X, rotulos)
+    print("\n[6] Silhouette por grupo (quão coeso é cada perfil; média geral "
+          f"= {sil.mean():.3f}):")
+    for c in sorted(nomes):
+        v = sil[rotulos == c]
+        print(f"    {nomes[c]:<22s} média = {v.mean():.3f} | "
+              f"jogadores com silhouette < 0: {(v < 0).sum()} de {len(v)}")
+
     grafico_clusters(pca, X, rotulos, nomes, km)
     grafico_heatmap(centros_z, nomes)
+    grafico_silhouette_clusters(sil, rotulos, nomes)
 
     # --- Salva resultados ---------------------------------------------------
     resumo.to_csv(PASTA_DADOS / "perfis_clusters.csv")
     df.to_csv(PASTA_DADOS / "dados_com_clusters.csv", index=False)
     joblib.dump({"kmeans": km, "pca": pca, "nomes_clusters": nomes, "colunas_perfil": perfil},
                 PASTA_MODELOS / "modelo_kmeans.joblib")
-    print("\n[6] Gráficos salvos na pasta graficos/ (02_*.png)")
+    print("\n[7] Gráficos salvos na pasta graficos/ (02_*.png)")
     print("Pronto! Próximo passo: python 03_supervisionado.py")
 
 
