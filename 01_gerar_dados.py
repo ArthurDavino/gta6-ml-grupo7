@@ -5,7 +5,8 @@ Projeto : GTA 6 — Perfis de jogadores e previsão de sucesso de golpes (heists
 Grupo 7 : Machine Learning (aprendizado supervisionado e não supervisionado)
 
 O QUE ESTE ARQUIVO FAZ
-    1. Simula 2.000 tentativas de golpe de jogadores de GTA 6 (dados sintéticos).
+    1. Simula N tentativas de golpe de jogadores de GTA 6 (dados sintéticos).
+       Por padrão N = 2.000, mas dá para escolher na linha de comando (veja abaixo).
     2. "Suja" um pouco os dados (valores faltando, duplicatas, outliers), como
        acontece no mundo real.
     3. Limpa os dados e aplica o PRÉ-PROCESSAMENTO:
@@ -23,9 +24,16 @@ ARQUIVOS GERADOS (pasta dados/ e modelos/)
                                         02, pelo 03 e pelo main.py)
 
 COMO RODAR
-    python 01_gerar_dados.py
+    python 01_gerar_dados.py                    # padrão: 2.000 jogadores, semente 42
+    python 01_gerar_dados.py 5000               # 5.000 jogadores
+    python 01_gerar_dados.py 5000 --semente 7   # outra semente = outros sorteios
+    python 01_gerar_dados.py -h                 # ajuda
+
+Quando mudar N ou a semente, rode de novo o 02 e o 03: eles usam os dados novos.
+Os números dos slides e dos PDFs são os do padrão (2.000 jogadores, semente 42).
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -45,8 +53,9 @@ if hasattr(sys.stdout, "reconfigure"):
 # ----------------------------------------------------------------------------
 # CONFIGURAÇÕES
 # ----------------------------------------------------------------------------
-SEMENTE = 42            # semente aleatória -> resultados reproduzíveis
-N_JOGADORES = 2000      # quantidade de linhas (1 linha = 1 jogador + 1 golpe)
+SEMENTE = 42            # semente padrão -> resultados reproduzíveis
+N_JOGADORES = 2000      # quantidade padrão de linhas (1 linha = 1 jogador + 1 golpe)
+N_MINIMO = 200          # menos que isso deixa a divisão treino/teste e a limpeza frágeis
 TAMANHO_TESTE = 0.20    # 20% para teste
 
 RAIZ = Path(__file__).resolve().parent
@@ -82,10 +91,9 @@ ARQUETIPOS = {
 # ----------------------------------------------------------------------------
 # PASSO 1 — GERAR DADOS SIMULADOS
 # ----------------------------------------------------------------------------
-def gerar_dados(rng: np.random.Generator) -> pd.DataFrame:
+def gerar_dados(rng: np.random.Generator, n: int = N_JOGADORES) -> pd.DataFrame:
     """Cria o DataFrame com jogadores simulados."""
     nomes = list(ARQUETIPOS)
-    n = N_JOGADORES
 
     # Cada jogador pertence a um arquétipo sorteado.
     escolhido = rng.integers(0, len(nomes), size=n)
@@ -182,7 +190,7 @@ def _simular_sucesso(df: pd.DataFrame, rng: np.random.Generator) -> np.ndarray:
 # ----------------------------------------------------------------------------
 # PASSO 2 — "SUJAR" OS DADOS (para praticar a limpeza)
 # ----------------------------------------------------------------------------
-def sujar_dados(df: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
+def sujar_dados(df: pd.DataFrame, rng: np.random.Generator, semente: int = SEMENTE) -> pd.DataFrame:
     sujo = df.copy()
     n = len(sujo)
 
@@ -195,7 +203,7 @@ def sujar_dados(df: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
     sujo.loc[idx, "hackeamento"] = 100 + rng.integers(10, 60, size=10)
 
     # 15 linhas duplicadas
-    duplicadas = sujo.sample(15, random_state=SEMENTE)
+    duplicadas = sujo.sample(15, random_state=semente)
     return pd.concat([sujo, duplicadas], ignore_index=True)
 
 
@@ -246,14 +254,14 @@ def criar_preprocessador() -> ColumnTransformer:
     )
 
 
-def processar(df_limpo: pd.DataFrame):
+def processar(df_limpo: pd.DataFrame, semente: int = SEMENTE):
     X = df_limpo[COLUNAS_NUMERICAS + COLUNAS_CATEGORICAS]
     y = df_limpo[ALVO]
 
     # Divisão treino/teste ESTRATIFICADA: mantém a mesma proporção de
     # sucesso/fracasso nos dois conjuntos.
     X_tr, X_te, y_tr, y_te = train_test_split(
-        X, y, test_size=TAMANHO_TESTE, random_state=SEMENTE, stratify=y
+        X, y, test_size=TAMANHO_TESTE, random_state=semente, stratify=y
     )
 
     # IMPORTANTE (evitar "vazamento de dados" / data leakage):
@@ -273,17 +281,40 @@ def processar(df_limpo: pd.DataFrame):
 # ----------------------------------------------------------------------------
 # EXECUÇÃO
 # ----------------------------------------------------------------------------
+def ler_argumentos() -> argparse.Namespace:
+    """Lê os argumentos da linha de comando (módulo argparse da biblioteca padrão).
+
+    Argumento posicional opcional: n_jogadores.  Opção: --semente.
+    Sem nenhum argumento, tudo fica como antes (2.000 jogadores, semente 42).
+    """
+    ap = argparse.ArgumentParser(
+        description="Gera os dados simulados de GTA 6 e faz o pré-processamento.")
+    ap.add_argument("n_jogadores", nargs="?", type=int, default=N_JOGADORES,
+                    help=f"quantidade de jogadores a simular (padrão: {N_JOGADORES})")
+    ap.add_argument("--semente", type=int, default=SEMENTE,
+                    help=f"semente aleatória (padrão: {SEMENTE})")
+    args = ap.parse_args()
+    if args.n_jogadores < N_MINIMO:
+        ap.error(f"use pelo menos {N_MINIMO} jogadores (recebido: {args.n_jogadores})")
+    return args
+
+
 def main() -> None:
+    args = ler_argumentos()
+    n, semente = args.n_jogadores, args.semente
     PASTA_DADOS.mkdir(exist_ok=True)
     PASTA_MODELOS.mkdir(exist_ok=True)
-    rng = np.random.default_rng(SEMENTE)
+    rng = np.random.default_rng(semente)
 
     print("=" * 60)
     print(" ETAPA 1 — Geração e pré-processamento dos dados")
     print("=" * 60)
+    if (n, semente) != (N_JOGADORES, SEMENTE):
+        print(f"(parâmetros escolhidos: {n} jogadores, semente {semente}. "
+              f"Rode o 02 e o 03 de novo!)")
 
-    limpo_original = gerar_dados(rng)
-    bruto = sujar_dados(limpo_original, rng)
+    limpo_original = gerar_dados(rng, n)
+    bruto = sujar_dados(limpo_original, rng, semente)
     bruto.to_csv(PASTA_DADOS / "dados_gta6_bruto.csv", index=False)
     print(f"[1] Dados brutos gerados: {len(bruto)} linhas x {bruto.shape[1]} colunas")
     print(f"    Valores faltando por coluna (só as que têm):")
@@ -298,7 +329,7 @@ def main() -> None:
     print(f"[2] Após limpeza: {len(limpo)} linhas (duplicatas removidas, "
           f"habilidades limitadas a 0–100)")
 
-    prep, treino, teste = processar(limpo)
+    prep, treino, teste = processar(limpo, semente)
     treino.to_csv(PASTA_DADOS / "treino_processado.csv", index=False)
     teste.to_csv(PASTA_DADOS / "teste_processado.csv", index=False)
     joblib.dump(
