@@ -149,7 +149,7 @@ function montarChrome() {
 /* tela de carregamento da capa: mostra o que foi carregado de verdade */
 function carregarCapa() {
   const D = window.GTA6;
-  const info = D ? `${D.rf.arvores.length} árvores · ${D.kmeans.centros.length} perfis · ${D.pontos.x.length.toLocaleString("pt-BR")} jogadores · ${D.colunas_saida.length} variáveis` : "falha ao carregar modelo_web.js (rode exportar_para_web.py)";
+  const info = D ? `${D.rf.arvores.length} árvores · ${D.kmeans.centros.length} perfis · ${D.pontos.x.length.toLocaleString("pt-BR")} jogadores · ${D.colunas_saida.length} variáveis` : "falha ao carregar modelo_web.js (mantenha todos os arquivos da pasta juntos)";
   let p = 0;
   const t = setInterval(() => {
     p = Math.min(100, p + 6 + Math.random() * 9);

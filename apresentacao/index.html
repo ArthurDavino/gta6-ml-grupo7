@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0c0620" />
+<title>Machine Learning em Leonida · Grupo 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="estilo.css" />
+</head>
+<body data-tone="sunset">
+<canvas id="ambient" aria-hidden="true"></canvas><div id="grain" aria-hidden="true"></div>
+
+<header id="header">
+  <div class="brand"><span class="brand-badge">VI</span><span>MACHINE LEARNING<br>EM LEONIDA</span></div>
+  <div class="headright">
+    <span class="speaker-tag" id="speaker-tag"></span>
+    <span class="wanted" id="wanted" role="img" aria-label="Progresso da apresentação"></span>
+    <span class="counter"><b id="index-num">01</b><span id="index-total"> / 14</span></span>
+  </div>
+</header>
+
+<main id="deck">
+
+<!-- 00 · CAPA (tela de carregamento) -->
+<section class="slide is-active cover" data-tone="sunset" data-person="0" data-part="ABERTURA" data-title="Machine Learning em Leonida" data-obj="Entre em Leonida e carregue os modelos">
+  <div class="bg-carousel" id="bg-carousel" aria-hidden="true">
+    <div class="bg-frame on" data-art="cidade"></div><div class="bg-frame" data-art="carro"></div><div class="bg-frame" data-art="banco"></div><div class="bg-frame" data-art="cassino"></div>
+  </div>
+  <div class="bg-shade"></div>
+  <div class="stage center">
+    <div class="cover-grid">
+      <div class="cover-text">
+        <div class="eyebrow reveal">GRUPO 7 · APRENDIZADO SUPERVISIONADO E NÃO SUPERVISIONADO</div>
+        <h1 class="reveal" style="--delay:90ms"><span class="gta">GTA&nbsp;VI</span><span class="times">×</span><br>Machine&nbsp;Learning</h1>
+        <p class="lede reveal" style="--delay:180ms">Perfis de jogadores e previsão de sucesso de golpes, com os modelos <b>rodando aqui dentro</b> da apresentação.</p>
+        <div class="crew reveal" id="crew" style="--delay:260ms"></div>
+        <div class="cover-actions reveal" style="--delay:340ms">
+          <button class="start-button" onclick="goTo(1)">Iniciar missão <span aria-hidden="true">▸</span></button>
+          <div class="loadbar"><span>CARREGANDO LEONIDA</span><div class="loadtrack"><i id="loadfill"></i></div><b id="loadpct">0%</b></div>
+        </div>
+        <p class="micro reveal" id="load-info" style="--delay:420ms"></p>
+      </div>
+      <div class="polaroids reveal" style="--delay:200ms" aria-hidden="true">
+        <figure class="polaroid p1"><div class="photo" data-art="lucia"></div><figcaption>LUCIA</figcaption></figure>
+        <figure class="polaroid p2"><div class="photo" data-art="jason"></div><figcaption>JASON</figcaption></figure>
+        <figure class="polaroid p3"><div class="photo" data-art="carro"></div><figcaption>LEONIDA, 2026</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 01 · BRIEFING -->
+<section class="slide" data-tone="night" data-person="0" data-part="O BRIEFING" data-title="Dois jeitos de aprender" data-obj="Entenda a diferença: com gabarito ou sem gabarito">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 01</span><span class="eyebrow">O BRIEFING</span></div>
+    <h2 class="reveal">Dois jeitos de <em>aprender</em></h2>
+    <div class="two-col fill">
+      <div class="col-stack reveal" style="--delay:120ms">
+        <button class="mode-card sel" data-mode="sup"><small>COM GABARITO</small><strong>Supervisionado</strong><span>Aprende com exemplos que já têm a resposta (o rótulo) para prever casos novos.</span></button>
+        <button class="mode-card" data-mode="uns"><small>SEM GABARITO</small><strong>Não supervisionado</strong><span>Ninguém diz a resposta. O algoritmo procura padrões e grupos sozinho.</span></button>
+        <div class="panel mini" id="mode-info"></div>
+      </div>
+      <div class="panel plot reveal" style="--delay:200ms">
+        <canvas id="cv-brief"></canvas>
+        <div class="plot-bar"><button class="pill primary" id="brief-btn">▶ Mostrar</button><span id="brief-msg" class="msg"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 · AS 4 ETAPAS -->
+<section class="slide" data-tone="neon" data-person="0" data-part="O PLANO" data-title="O projeto em 4 etapas" data-obj="Clique em cada etapa para ver o código">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 02</span><span class="eyebrow">O PLANO</span></div>
+    <h2 class="reveal">O projeto em <em>4 etapas</em></h2>
+    <div class="pipe reveal" id="pipe" style="--delay:100ms"></div>
+    <div class="panel pipe-detail reveal" style="--delay:180ms">
+      <div class="pd-left">
+        <span class="file" id="pd-file"></span>
+        <h3 id="pd-title"></h3>
+        <ul class="bul" id="pd-list"></ul>
+        <div class="chips" id="pd-out"></div>
+      </div>
+      <pre class="code" id="pd-code"></pre>
+    </div>
+  </div>
+</section>
+
+<!-- 03 · DADOS -->
+<section class="slide" data-tone="night" data-person="0" data-part="OS DADOS" data-title="Preparando os dados" data-obj="Limpe os dados e padronize as escalas">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 03</span><span class="eyebrow">OS DADOS · ARQUIVO 01</span></div>
+    <h2 class="reveal">Preparando os <em>dados</em></h2>
+    <div class="two-col fill wide-l">
+      <div class="panel reveal" style="--delay:100ms">
+        <div class="tabs" id="stage-tabs"></div>
+        <p class="stage-desc" id="stage-desc"></p>
+        <div class="tbl-wrap"><table id="data-table"></table></div>
+        <p class="micro">Dados reais gerados pelo <span class="mono">01_gerar_dados.py</span>. Treino 80% · teste 20% · padronizador ajustado só no treino.</p>
+      </div>
+      <div class="panel zcalc reveal" style="--delay:180ms">
+        <h3>Calculadora de z-score</h3>
+        <div class="chips" id="z-vars"></div>
+        <input type="range" id="z-slider" />
+        <div class="z-formula">z = (<b id="z-x"></b> − <b id="z-mu"></b>) ÷ <b id="z-sd"></b> = <b id="z-res" class="hot"></b></div>
+        <canvas id="cv-z"></canvas>
+        <p class="msg" id="z-msg"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 · K-MEANS AO VIVO -->
+<section class="slide" data-tone="neon" data-person="1" data-part="K-MEANS" data-title="K-Means ao vivo" data-obj="Rode o K-Means e veja os centróides andarem">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 04</span><span class="eyebrow">NÃO SUPERVISIONADO · ARQUIVO 02</span></div>
+    <h2 class="reveal">K-Means <em>ao vivo</em></h2>
+    <div class="km-grid fill">
+      <div class="panel plot reveal" style="--delay:100ms">
+        <canvas id="cv-km"></canvas>
+        <div class="plot-legend" id="km-legend"></div>
+      </div>
+      <div class="km-side reveal" style="--delay:180ms">
+        <div class="panel">
+          <h4>Quantos grupos (K)? <small>barra = silhouette</small></h4>
+          <div class="kbars" id="k-bars"></div>
+        </div>
+        <div class="panel">
+          <div class="btn-row">
+            <button class="pill primary" id="km-run">▶ Rodar</button>
+            <button class="pill" id="km-step">Passo ▸</button>
+            <button class="pill" id="km-reset">↺ Sortear de novo</button>
+            <button class="pill" id="km-best">✦ 10 inícios</button>
+          </div>
+          <label class="check"><input type="checkbox" id="km-pp" /> início inteligente (k-means++)</label>
+          <div class="readouts">
+            <div><small>ITERAÇÃO</small><b id="km-it">0</b></div>
+            <div><small>INÉRCIA J</small><b id="km-j">—</b></div>
+            <div><small>MELHOR (PYTHON)</small><b id="km-py">—</b></div>
+          </div>
+          <p class="msg" id="km-msg"></p>
+        </div>
+        <div class="panel formula-card"><small>O QUE ELE MINIMIZA</small><div class="formula">J = Σ ‖x − μ<sub>j</sub>‖²</div><span class="micro">1) cada ponto vai ao centróide mais próximo · 2) cada centróide vira a média do grupo</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 · PERFIS + PCA -->
+<section class="slide" data-tone="sunset" data-person="1" data-part="PCA E PERFIS" data-title="Os 4 perfis de jogador" data-obj="Descubra quem é cada perfil de jogador">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 05</span><span class="eyebrow">PCA · 9 DIMENSÕES EM 2D</span></div>
+    <h2 class="reveal">Os 4 perfis de <em>jogador</em></h2>
+    <div class="prof-grid fill">
+      <div class="panel plot reveal" style="--delay:100ms">
+        <canvas id="cv-pca"></canvas>
+        <div class="hover-tip" id="pca-tip"></div>
+        <div class="plot-legend" id="pca-legend"></div>
+      </div>
+      <div class="prof-side reveal" style="--delay:180ms">
+        <div class="chips" id="prof-tabs"></div>
+        <div class="panel prof-card">
+          <svg id="radar" viewBox="0 0 220 220" role="img" aria-label="Gráfico de radar das habilidades do perfil"></svg>
+          <div class="prof-text">
+            <h3 id="prof-name"></h3>
+            <div class="stat-row"><div><small>TAXA DE SUCESSO</small><b id="prof-succ"></b></div><div><small>JOGADORES</small><b id="prof-n"></b></div></div>
+            <p id="prof-desc"></p>
+          </div>
+        </div>
+        <div class="panel"><small>VARIÂNCIA EXPLICADA PELO PCA</small><div class="scree" id="scree"></div><span class="micro" id="scree-msg"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 · REGRESSÃO LOGÍSTICA -->
+<section class="slide" data-tone="night" data-person="1" data-part="REGRESSÃO LOGÍSTICA" data-title="Regressão Logística" data-obj="Arraste o controle e veja a probabilidade mudar">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 06</span><span class="eyebrow">SUPERVISIONADO · ARQUIVO 03</span></div>
+    <h2 class="reveal">Regressão <em>Logística</em></h2>
+    <div class="two-col fill">
+      <div class="panel flexcol reveal" style="--delay:100ms">
+        <canvas id="cv-sig"></canvas>
+        <div class="sig-ctrl"><label for="z-logit">pontuação z = w · x + b</label><input type="range" id="z-logit" min="-6" max="6" step="0.05" value="0" /></div>
+        <div class="formula big">p = 1 / (1 + e<sup>−z</sup>) = <b id="lr-p" class="hot"></b></div>
+      </div>
+      <div class="panel reveal" style="--delay:180ms">
+        <h4>O que o modelo aprendeu <small>pesos w (variáveis padronizadas)</small></h4>
+        <div class="coefs" id="lr-coefs"></div>
+        <p class="msg" id="lr-msg"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 · RANDOM FOREST -->
+<section class="slide" data-tone="neon" data-person="2" data-part="RANDOM FOREST" data-title="300 árvores votando" data-obj="Veja as 300 árvores votarem no mesmo golpe">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 07</span><span class="eyebrow">SUPERVISIONADO · ARQUIVO 03</span></div>
+    <h2 class="reveal">300 árvores <em>votando</em></h2>
+    <div class="two-col fill wide-l">
+      <div class="panel reveal" style="--delay:100ms">
+        <div class="chips" id="rf-presets"></div>
+        <div class="forest-wrap"><div class="forest" id="forest"></div>
+          <div class="forest-read"><small>PROBABILIDADE DE SUCESSO</small><b id="rf-p"></b><span id="rf-who"></span><div class="legend-grad"><i></i><span>0% falha</span><span>100% sucesso</span></div></div>
+        </div>
+      </div>
+      <div class="col-stack reveal" style="--delay:180ms">
+        <div class="panel">
+          <h4>Impureza de Gini <small>como cada árvore escolhe a pergunta</small></h4>
+          <input type="range" id="gini-p" min="0" max="1" step="0.01" value="0.5" />
+          <div class="formula">G = 1 − Σ p² = <b id="gini-g" class="hot"></b></div>
+          <div class="gini-bar"><i id="gini-fill"></i></div>
+          <p class="msg" id="gini-msg"></p>
+        </div>
+        <div class="panel steps">
+          <ol class="bul num">
+            <li><b>Bootstrap:</b> cada árvore treina com uma amostra aleatória dos dados.</li>
+            <li><b>Perguntas:</b> a cada divisão só vê algumas variáveis (√d).</li>
+            <li><b>Votação:</b> a floresta tira a média das 300 respostas.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 · COMPARAÇÃO -->
+<section class="slide" data-tone="sunset" data-person="2" data-part="COMPARAÇÃO" data-title="Qual modelo acerta mais?" data-obj="Mexa no limiar e veja acertos e erros mudarem">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 08</span><span class="eyebrow">AVALIAÇÃO NO CONJUNTO DE TESTE</span></div>
+    <h2 class="reveal">Qual modelo <em>acerta mais?</em></h2>
+    <div class="two-col fill">
+      <div class="panel reveal" style="--delay:100ms">
+        <h4>Acurácia no teste <small>400 golpes que o modelo nunca viu</small></h4>
+        <div class="hbars" id="acc-bars"></div>
+        <div class="overfit" id="overfit"></div>
+        <h4 style="margin-top:1rem">O que a Random Forest mais usa <small>importância das variáveis (Gini)</small></h4>
+        <div class="hbars imp" id="imp-bars"></div>
+      </div>
+      <div class="panel reveal" style="--delay:180ms">
+        <div class="tabs" id="cmp-tabs"></div>
+        <div class="conf" id="conf"></div>
+        <div class="sig-ctrl"><label for="limiar">limiar de decisão: diz "sucesso" se p ≥ <b id="limiar-v"></b></label><input type="range" id="limiar" min="0.1" max="0.9" step="0.01" value="0.5" /></div>
+        <div class="metrics" id="metrics"></div>
+        <p class="msg" id="cmp-msg"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 · DEMO (main.py dentro da apresentação) -->
+<section class="slide" data-tone="sunset" data-person="2,3" data-part="DEMONSTRAÇÃO" data-title="Planeje o golpe" data-obj="Monte o golpe e deixe os modelos decidirem">
+  <div class="stage tight">
+    <div class="topline reveal"><span class="mission">MISSÃO 09</span><span class="eyebrow">DEMONSTRAÇÃO AO VIVO · MESMOS MODELOS DO main.py</span></div>
+    <div class="sim fill reveal" style="--delay:80ms">
+      <div class="panel sim-col">
+        <h4><i>1</i> O golpe</h4>
+        <div class="heist-cards" id="heist-cards"></div>
+        <div class="sliders" id="heist-sliders"></div>
+        <div class="sim-radar"><small>HABILIDADES DO JOGADOR</small><svg id="sim-radar" viewBox="0 0 220 220" role="img" aria-label="Radar das habilidades do jogador"></svg></div>
+      </div>
+      <div class="panel sim-col">
+        <h4><i>2</i> O jogador</h4>
+        <div class="presets" id="presets"></div>
+        <div class="sliders two" id="player-sliders"></div>
+      </div>
+      <div class="panel sim-col verdict" id="verdict">
+        <h4><i>3</i> O veredito</h4>
+        <div class="stamp" id="stamp"></div>
+        <div class="profile-line" id="profile-line"></div>
+        <div class="gauges"><div class="gauge" id="g-lr"></div><div class="gauge" id="g-rf"></div></div>
+        <div class="why" id="why"></div>
+        <div class="vote-line" id="vote-line"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · TERMINAL -->
+<section class="slide" data-tone="neon" data-person="3" data-part="O CÓDIGO PYTHON" data-title="O código rodando de verdade" data-obj="Execute os scripts Python do projeto">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 10</span><span class="eyebrow">SAÍDA REAL DO TERMINAL</span></div>
+    <h2 class="reveal">O código <em>rodando de verdade</em></h2>
+    <div class="term-wrap fill reveal" style="--delay:100ms">
+      <div class="tabs" id="term-tabs"></div>
+      <div class="term">
+        <div class="term-bar"><i></i><i></i><i></i><span id="term-title"></span><button class="pill primary" id="term-run">▶ Executar</button></div>
+        <pre id="term-out"></pre>
+      </div>
+      <p class="micro">Esta é a saída gravada da execução real dos scripts <span class="mono">.py</span> deste projeto (o texto aparece aos poucos).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · LIMITES -->
+<section class="slide" data-tone="day" data-person="3" data-part="LIMITES" data-title="Limitações e próximos passos" data-obj="Conheça os limites e as melhorias">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">MISSÃO 11</span><span class="eyebrow">O QUE NÃO PODEMOS AFIRMAR</span></div>
+    <h2 class="reveal">Limitações e <em>próximos passos</em></h2>
+    <div class="two-col fill">
+      <div class="col-stack reveal" style="--delay:100ms" id="lim-list"></div>
+      <div class="panel big-msg reveal" style="--delay:180ms"><small id="lim-k"></small><h3 id="lim-t"></h3><p id="lim-p"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · COMO RODAR -->
+<section class="slide" data-tone="night" data-person="3" data-part="COMO RODAR" data-title="Rode o código fora daqui" data-obj="Escolha onde rodar o código Python">
+  <div class="stage">
+    <div class="topline reveal"><span class="mission">BÔNUS</span><span class="eyebrow">COMO RODAR O PROJETO</span></div>
+    <h2 class="reveal">Rode o código <em>fora daqui</em></h2>
+    <div class="how fill reveal" style="--delay:100ms">
+      <div class="how-tabs" id="how-tabs"></div>
+      <div class="panel how-body"><div id="how-text"></div><div class="how-code" id="how-code"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · FIM -->
+<section class="slide" data-tone="sunset" data-person="3" data-part="MISSÃO CUMPRIDA" data-title="Missão cumprida" data-obj="Responda às perguntas do professor">
+  <div class="bg-carousel solo" aria-hidden="true"><div class="bg-frame on" data-art="cidade"></div></div><div class="bg-shade"></div>
+  <div class="stage center end">
+    <div class="end-grid">
+      <div class="polaroids end-photos" aria-hidden="true">
+        <figure class="polaroid p1"><div class="photo" data-art="lucia"></div><figcaption>LUCIA</figcaption></figure>
+        <figure class="polaroid p2"><div class="photo" data-art="jason"></div><figcaption>JASON</figcaption></figure>
+      </div>
+      <div class="end-text">
+        <div class="passed reveal">MISSÃO CUMPRIDA</div>
+        <p class="respect reveal" style="--delay:120ms">RESPEITO +1000 · <span id="end-stats"></span></p>
+        <h2 class="reveal" style="--delay:200ms">Perguntas<em>?</em></h2>
+        <div class="end-links reveal" style="--delay:280ms">
+          <a class="pill" id="repo-link" target="_blank" rel="noopener noreferrer">Código no GitHub</a>
+          <button class="pill" onclick="goTo(9)">↺ Voltar à demonstração</button>
+          <button class="pill" onclick="goTo(0)">⏮ Recomeçar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav id="rail" aria-label="Ir para slide"></nav>
+<footer id="bottom">
+  <div class="objective"><i aria-hidden="true">▶</i><div><small>OBJETIVO</small><b id="objective-text"></b></div></div>
+  <div class="controls" aria-label="Controles da apresentação">
+    <button onclick="openOverview()" title="Visão geral (M)" aria-label="Visão geral">▦</button>
+    <button onclick="toggleNotes()" title="Notas (N)" aria-label="Notas do apresentador">☷</button>
+    <button onclick="toggleTimer()" title="Cronômetro (C)" aria-label="Cronômetro">◷</button>
+    <span class="ctrl-divider"></span>
+    <button onclick="goTo(current-1)" title="Anterior (←)" aria-label="Slide anterior">←</button>
+    <button class="primary" onclick="goTo(current+1)" title="Próximo (→)" aria-label="Próximo slide">→ <span class="label">Próximo</span></button>
+    <span class="ctrl-divider"></span>
+    <button onclick="toggleFullscreen()" title="Tela cheia (F)" aria-label="Tela cheia">⛶</button>
+    <button onclick="openHelp()" title="Atalhos (?)" aria-label="Atalhos">?</button>
+  </div>
+</footer>
+<div id="progress"></div><div id="timer" aria-live="off">00:00</div>
+
+<aside id="notes-panel" aria-label="Notas do apresentador">
+  <div class="panel-header"><span class="eyebrow">MODO APRESENTADOR</span><button onclick="toggleNotes()" aria-label="Fechar notas">×</button></div>
+  <div class="notes-title" id="notes-title"></div><div class="notes-person" id="notes-person"></div>
+  <div class="notes-body" id="notes-body"></div>
+  <div class="notes-tip">As notas ficam ocultas para a plateia até você apertar N.</div>
+</aside>
+<div id="overview" role="dialog" aria-label="Visão geral dos slides" aria-modal="true"><div class="overlay-heading"><h2>Todas as missões</h2><button class="close-round" onclick="closeOverview()" aria-label="Fechar">×</button></div><div class="overview-grid" id="overview-grid"></div></div>
+<div id="help-modal" role="dialog" aria-label="Atalhos de teclado" aria-modal="true">
+  <div class="overlay-heading"><h2>Como apresentar</h2><button class="close-round" onclick="closeHelp()" aria-label="Fechar">×</button></div>
+  <div class="help-grid">
+    <div><span>Avançar / voltar</span><kbd>→ / ←</kbd></div><div><span>Visão geral</span><kbd>M</kbd></div>
+    <div><span>Notas de fala</span><kbd>N</kbd></div><div><span>Cronômetro</span><kbd>C</kbd></div>
+    <div><span>Tela cheia</span><kbd>F</kbd></div><div><span>Primeiro / último</span><kbd>Home / End</kbd></div>
+    <div><span>Fechar painéis</span><kbd>Esc</kbd></div><div><span>Ir direto à demo</span><kbd>D</kbd></div>
+  </div>
+  <p class="help-note">Tudo que tem botão, controle deslizante ou gráfico clicável é interativo. As setas do teclado não funcionam enquanto você digita em campos de texto.</p>
+</div>
+
+<script src="modelo_web.js"></script>
+<script src="modelo.js"></script>
+<script src="arte.js"></script>
+<script src="app.js"></script>
+<script src="slides.js"></script>
+</body>
+</html>
