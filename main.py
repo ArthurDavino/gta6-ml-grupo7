@@ -44,6 +44,10 @@ ARQUIVOS_NECESSARIOS = [
 ]
 
 TIPOS_GOLPE = ["Banco", "Joalheria", "Carro-forte", "Cassino"]
+
+# Limites do veredito (aplicados à MÉDIA das probabilidades dos dois modelos)
+LIMITE_ALTA = 0.60      # média >= 60%  -> alta chance
+LIMITE_RISCO = 0.40     # média >= 40%  -> risco alto; abaixo disso -> baixa chance
 DIFICULDADE_BASE = {"Banco": 6, "Joalheria": 4, "Carro-forte": 5, "Cassino": 8}
 
 # (coluna, texto da pergunta, mínimo, máximo, valor padrão)
@@ -181,6 +185,15 @@ def descobrir_perfil(m: dict, z: pd.DataFrame) -> tuple[str, float]:
     return pacote["nomes_clusters"][cluster], distancia
 
 
+def classificar(media: float) -> tuple[str, str]:
+    """Devolve (rótulo curto, frase do veredito) para a média das probabilidades."""
+    if media >= LIMITE_ALTA:
+        return "ALTA", "ALTA chance de sucesso — pode ir!"
+    if media >= LIMITE_RISCO:
+        return "RISCO", "RISCO ALTO — resultado incerto, vale melhorar o plano."
+    return "BAIXA", "BAIXA chance de sucesso — melhor repensar o golpe."
+
+
 def prever(m: dict, entrada: dict, titulo: str = "") -> None:
     z = transformar(m, entrada)
     perfil, dist = descobrir_perfil(m, z)
@@ -199,12 +212,7 @@ def prever(m: dict, entrada: dict, titulo: str = "") -> None:
     print(f"   Regressão Logística : {p_lr:6.1%}  {barra(p_lr)}")
     print(f"   Random Forest       : {p_rf:6.1%}  {barra(p_rf)}")
 
-    if media >= 0.60:
-        veredito = "ALTA chance de sucesso — pode ir!"
-    elif media >= 0.40:
-        veredito = "RISCO ALTO — resultado incerto, vale melhorar o plano."
-    else:
-        veredito = "BAIXA chance de sucesso — melhor repensar o golpe."
+    _, veredito = classificar(media)
     print(f"\n Veredito (média dos modelos = {media:.1%}): {veredito}")
     if abs(p_lr - p_rf) >= 0.15:
         print(" Obs.: os modelos DISCORDAM bastante. A Random Forest captura interações")
@@ -247,6 +255,28 @@ def opcao_cenarios(m):
         prever(m, CENARIOS[n], n)
 
 
+def opcao_tabela(m):
+    """Resume, numa única tabela, o perfil e as chances de cada cenário pronto."""
+    pacote = m["kmeans"]
+    print("\n--- Perfis que o K-Means encontrou ---")
+    print("  " + " | ".join(pacote["nomes_clusters"][c] for c in sorted(pacote["nomes_clusters"])))
+    linhas = []
+    for nome, entrada in CENARIOS.items():
+        z = transformar(m, entrada)
+        perfil, _ = descobrir_perfil(m, z)
+        p_lr = float(m["lr"].predict_proba(z)[0, 1])
+        p_rf = float(m["rf"].predict_proba(z)[0, 1])
+        media = (p_lr + p_rf) / 2
+        linhas.append((nome.split(" (")[0], perfil, p_lr, p_rf, media, classificar(media)[0]))
+    larg = max(len(l[0]) for l in linhas)
+    print("\n--- Tabela-resumo dos cenários prontos ---")
+    print(f" {'Cenário':<{larg}}  {'Perfil (K-Means)':<21} {'Logística':>9} {'Floresta':>9} {'Média':>7}  Veredito")
+    print(" " + "-" * (larg + 62))
+    for nome, perfil, p_lr, p_rf, media, ver in linhas:
+        print(f" {nome:<{larg}}  {perfil:<21} {p_lr:>9.1%} {p_rf:>9.1%} {media:>7.1%}  {ver}")
+    print(f"\n Veredito: ALTA se a média ≥ {LIMITE_ALTA:.0%}, RISCO se ≥ {LIMITE_RISCO:.0%}, senão BAIXA.")
+
+
 def opcao_perfil(m):
     print("\n--- Descobrir o perfil de um jogador (K-Means) ---")
     entrada = coletar_entrada(somente_perfil=True)
@@ -263,8 +293,10 @@ def opcao_metricas(_m):
         print("Métricas não encontradas. Rode a etapa 3.")
         return
     t = pd.read_csv(arquivo).set_index("modelo").T
-    t.index = ["acurácia (treino)", "acurácia (teste)", "precisão", "recall", "F1",
-               "validação cruzada (média)", "validação cruzada (desvio)"]
+    rotulos = {"acuracia_treino": "acurácia (treino)", "acuracia_teste": "acurácia (teste)",
+               "precisao": "precisão", "recall": "recall", "f1": "F1", "auc": "AUC",
+               "cv_media": "validação cruzada (média)", "cv_desvio": "validação cruzada (desvio)"}
+    t.index = [rotulos.get(i, i) for i in t.index]
     print("\n--- Métricas dos modelos (conjunto de TESTE) ---")
     print(t.to_string(float_format=lambda v: f"{v:.3f}"))
     perfis = PASTA_DADOS / "perfis_clusters.csv"
@@ -291,10 +323,11 @@ MENU = """
  3) Descobrir o perfil de um jogador (K-Means)
  4) Ver métricas dos modelos e perfis encontrados
  5) Gerar dados e treinar tudo de novo (etapas 1, 2 e 3)
+ 6) Tabela-resumo dos cenários prontos (perfil e chances)
  0) Sair
 """
 ACOES = {"1": opcao_prever, "2": opcao_cenarios, "3": opcao_perfil,
-         "4": opcao_metricas, "5": opcao_retreinar}
+         "4": opcao_metricas, "5": opcao_retreinar, "6": opcao_tabela}
 
 
 def main() -> None:
