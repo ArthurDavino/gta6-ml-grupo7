@@ -13,6 +13,7 @@ PRÉ-REQUISITO : ter rodado 01_gerar_dados.py
 SAÍDAS
     graficos/03_matriz_confusao.png        -> acertos e erros de cada modelo
     graficos/03_importancia_variaveis.png  -> o que mais pesa na previsão
+    graficos/03_roc.png                    -> curva ROC e AUC dos dois modelos
     dados/metricas_modelos.csv             -> tabela de métricas
     modelos/modelo_regressao_logistica.joblib
     modelos/modelo_random_forest.joblib    -> usados pelo main.py
@@ -34,7 +35,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (ConfusionMatrixDisplay, accuracy_score, confusion_matrix,
-                             f1_score, precision_score, recall_score)
+                             f1_score, precision_score, recall_score, roc_auc_score,
+                             roc_curve)
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -111,6 +113,7 @@ def metricas(nome, modelo, X_tr, y_tr, X_te, y_te, cv) -> dict:
         "precisao": precision_score(y_te, pred_te),
         "recall": recall_score(y_te, pred_te),
         "f1": f1_score(y_te, pred_te),
+        "auc": roc_auc_score(y_te, modelo.predict_proba(X_te)[:, 1]),   # veja grafico_roc
         "cv_media": cv_scores.mean(),
         "cv_desvio": cv_scores.std(),
     }
@@ -129,6 +132,42 @@ def grafico_matrizes(modelos: dict, X_te, y_te) -> None:
         ax.set_ylabel("Resultado real")
     fig.tight_layout()
     fig.savefig(PASTA_GRAFICOS / "03_matriz_confusao.png", dpi=130)
+    plt.close(fig)
+
+
+def grafico_roc(modelos: dict, X_te, y_te) -> None:
+    """Curva ROC e AUC: avalia o modelo em TODOS os limiares de decisão de uma vez.
+
+    MATEMÁTICA: até agora decidimos "sucesso" quando p >= 0,5. Mas esse limiar é
+    uma escolha. Para cada limiar possível calculamos dois números:
+        TPR (taxa de verdadeiros positivos = recall) = VP / (VP + FN)
+        FPR (taxa de falsos positivos)               = FP / (FP + VN)
+    A curva ROC liga os pontos (FPR, TPR) de todos os limiares. A AUC é a ÁREA
+    sob a curva:
+        AUC = 0,5 -> o modelo "chuta" (a diagonal tracejada)
+        AUC = 1,0 -> modelo perfeito
+    Interpretação da AUC: é a probabilidade de o modelo dar uma nota MAIOR para um
+    golpe que deu certo do que para um que falhou, sorteados ao acaso.
+    O ponto grande em cada curva é onde o modelo fica com o limiar 0,5 do projeto.
+    """
+    cores = {"Regressão Logística": "#0072B2", "Random Forest": "#D55E00"}
+    fig, ax = plt.subplots(figsize=(6.2, 5.6))
+    for nome, modelo in modelos.items():
+        p = modelo.predict_proba(X_te)[:, 1]
+        fpr, tpr, _ = roc_curve(y_te, p)
+        auc = roc_auc_score(y_te, p)
+        ax.plot(fpr, tpr, lw=2.2, color=cores.get(nome), label=f"{nome} (AUC = {auc:.3f})")
+        vn, fp, fn, vp = confusion_matrix(y_te, (p >= 0.5).astype(int)).ravel()
+        ax.scatter(fp / (fp + vn), vp / (vp + fn), s=70, color=cores.get(nome), zorder=5,
+                   edgecolor="white")
+    ax.plot([0, 1], [0, 1], "k--", lw=1, label="chute (AUC = 0.500)")
+    ax.set(title="Curva ROC (conjunto de teste)",
+           xlabel="Taxa de falsos positivos (FPR)", ylabel="Taxa de verdadeiros positivos (recall)",
+           xlim=(0, 1), ylim=(0, 1.02))
+    ax.grid(alpha=0.3)
+    ax.legend(loc="lower right")
+    fig.tight_layout()
+    fig.savefig(PASTA_GRAFICOS / "03_roc.png", dpi=130)
     plt.close(fig)
 
 
@@ -221,10 +260,11 @@ def main() -> None:
     tabela = pd.DataFrame([metricas(n, m, X_tr, y_tr, X_te, y_te, cv) for n, m in modelos.items()])
     print("\n[3] Comparação dos modelos (métricas no TESTE, exceto onde indicado):")
     exibir = tabela.set_index("modelo").T
-    exibir.index = ["acurácia (treino)", "acurácia (teste)", "precisão", "recall", "F1",
+    exibir.index = ["acurácia (treino)", "acurácia (teste)", "precisão", "recall", "F1", "AUC",
                     "validação cruzada (média)", "validação cruzada (desvio)"]
     print(exibir.to_string(float_format=lambda v: f"{v:.3f}"))
     print(f"    Random Forest — acurácia OOB: {rf.oob_score_:.3f}")
+    print("    AUC: 0,5 = chute e 1,0 = perfeito (área sob a curva ROC, todos os limiares).")
 
     for nome, m in modelos.items():
         vn, fp, fn, vp = confusion_matrix(y_te, m.predict(X_te)).ravel()
@@ -239,6 +279,7 @@ def main() -> None:
 
     # --- Gráficos e arquivos -----------------------------------------------
     grafico_matrizes(modelos, X_te, y_te)
+    grafico_roc(modelos, X_te, y_te)
     grafico_importancias(lr, rf, colunas)
     tabela.to_csv(PASTA_DADOS / "metricas_modelos.csv", index=False)
     joblib.dump({"modelo": lr, "colunas": colunas}, PASTA_MODELOS / "modelo_regressao_logistica.joblib")
